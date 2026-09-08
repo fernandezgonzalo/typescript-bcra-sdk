@@ -1,0 +1,9 @@
+tests/
+src/
+*.config.*
+tsconfig*
+eslint*
+.prettierrc
+typedoc.json
+.github/
+changeset*
