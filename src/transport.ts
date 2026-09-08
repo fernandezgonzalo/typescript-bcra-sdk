@@ -4,6 +4,7 @@ import {
   BCRATimeoutError,
 } from './errors.js'
 import { RetryPolicy, parseRetryAfter } from './retry.js'
+import { buildParams } from './utils/params.js'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms * 1000))
@@ -64,12 +65,8 @@ export class Transport {
 
   private buildUrl(path: string, params?: Record<string, unknown>): string {
     const url = new URL(path, this.baseUrl)
-    if (params) {
-      for (const [key, value] of Object.entries(params)) {
-        if (value != null && value !== '') {
-          url.searchParams.set(key, String(value))
-        }
-      }
+    for (const [key, value] of buildParams(params)) {
+      url.searchParams.set(key, value)
     }
     return url.toString()
   }
