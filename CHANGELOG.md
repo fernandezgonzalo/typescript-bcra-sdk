@@ -1,11 +1,9 @@
 # Changelog
 
-Todas las novedades del proyecto se registran en
-[`CHANGELOG.md`](https://github.com/gonzadev/typescript-bcra-sdk/blob/main/CHANGELOG.md)
-(el formato sigue [Keep a Changelog](https://keepachangelog.com/) y los cambios
-[Conventional Commits](https://www.conventionalcommits.org/)).
+All notable changes to this project will be documented in this file.
 
-Última versión: **0.1.0 (en curso)**.
+The format is based on [Keep a Changelog](https://keepachangelog.com/),
+and this project adheres to [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## [Unreleased]
 
