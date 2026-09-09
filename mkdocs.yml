@@ -1,0 +1,65 @@
+site_name: bcra-sdk
+site_description: SDK en TypeScript para las APIs públicas del Banco Central de la República Argentina (BCRA)
+site_url: https://typescript-bcra-sdk.readthedocs.io/
+repo_url: https://github.com/gonzadev/typescript-bcra-sdk
+edit_uri: tree/main/docs
+
+theme:
+  name: material
+  language: es
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - tables
+
+plugins:
+  - search
+
+extra:
+  generator: false
+
+copyright: MIT &copy; gonzadev
+
+nav:
+  - Inicio: index.md
+  - Instalación: instalacion.md
+  - Guía rápida: guia-rapida.md
+  - Endpoints:
+      - Deudores: endpoints/deudores.md
+      - Cheques: endpoints/cheques.md
+      - Estadísticas cambiarias: endpoints/estadisticas-cambiarias.md
+      - Estadísticas monetarias: endpoints/monetarias.md
+      - Régimen de Transparencia: endpoints/transparencia.md
+  - API Reference:
+      - Cliente y configuración: api/cliente.md
+      - Recursos: api/recursos.md
+      - Modelos: api/modelos.md
+      - Errores: api/errores.md
+  - Versionado de endpoints: versionado.md
+  - Reintentos: retry.md
+  - Errores: errores.md
+  - Contribución: contribucion.md
+  - Changelog: changelog.md

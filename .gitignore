@@ -1,7 +1,7 @@
 node_modules/
 dist/
 coverage/
-docs/
+api-docs/
 *.tsbuildinfo
 .DS_Store
 .turbo/

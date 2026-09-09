@@ -93,11 +93,17 @@ Todas las fallas son instancias de `BCRAError`:
 
 ## Documentación
 
-La documentación completa de la API (generada con TypeDoc) se compila con:
+La documentación completa (guias, endpoints, API reference) está publicada en
+[ReadTheDocs](https://bcra-sdk.readthedocs.io/).
+
+La referencia de API generada con TypeDoc se compila con:
 
 ```bash
 npm run docs
 ```
+
+(salida en `api-docs/`). El sitio estático se construye con MkDocs Material desde `docs/`
+(`mkdocs.yml` + `.readthedocs.yaml`).
 
 ## Desarrollo
 
@@ -121,7 +127,7 @@ npm run record:fixtures
 
 Los fixtures incluyen las respuestas reales para los 19 endpoints; para
 Central de Deudores la identificación de ejemplo (`20111111112`) devuelve
-`404`, igual que en el SDK Python de referencia. Correspondencia de
+`404`. Correspondencia de
 verificación: `typecheck` → `test` → `lint` → `format:check` → `build`.
 
 ## Licencia
