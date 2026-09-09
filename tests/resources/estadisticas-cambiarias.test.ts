@@ -1,17 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { EstadisticasCambiarias } from '../../src/resources/estadisticas-cambiarias'
 import { Transport } from '../../src/transport'
+import { jsonResponse, loadFixture } from '../setup'
+import type { Divisa } from '../../src/models/divisas'
 import type { ResultGetDivisasV1 } from '../../src/models/divisas'
 import type { ResultGetCotizacionesV1 } from '../../src/models/cotizaciones'
+import type { Resultset } from '../../src/models/evolucion'
 import type { ResultGetEvolucionMonedaV1 } from '../../src/models/evolucion'
-
-function jsonResponse(body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    statusText: 'OK',
-    headers: { 'content-type': 'application/json' },
-  })
-}
 
 function makeEstadisticasCambiarias(): {
   estadisticasCambiarias: EstadisticasCambiarias
@@ -25,31 +20,26 @@ function makeEstadisticasCambiarias(): {
   }
 }
 
-const divisasPayload = [{ codigo: 'USD', denominacion: 'Dólar estadounidense' }]
+const divisasResult = (
+  loadFixture('estadisticasCambiarias.getDivisas').body as {
+    results: Divisa[]
+  }
+).results
 
-const cotizacionesPayload = [
-  {
-    codigoMoneda: 'USD',
-    descripcion: 'Dólar estadounidense',
-    tipoPase: 1,
-    tipoCotizacion: 10,
-  },
-]
+const cotizacionesResult = (
+  loadFixture('estadisticasCambiarias.getCotizaciones').body as {
+    results: ResultGetCotizacionesV1
+  }
+).results
 
-const cotizacionesResult = {
-  fecha: '2024-06-01',
-  detalle: cotizacionesPayload,
+interface EvolucionMonedaBody {
+  readonly status: number
+  readonly metadata: { resultset: Resultset }
+  readonly results: ResultGetCotizacionesV1[]
 }
 
-const evolucionPayload = {
-  metadata: { resultset: { count: 1, offset: 0, limit: 1000 } },
-  results: [
-    {
-      fecha: '2024-06-01',
-      detalle: cotizacionesPayload,
-    },
-  ],
-}
+const evolucionBody = loadFixture('estadisticasCambiarias.getEvolucionMoneda')
+  .body as EvolucionMonedaBody
 
 describe('EstadisticasCambiarias', () => {
   afterEach(() => {
@@ -74,22 +64,24 @@ describe('EstadisticasCambiarias', () => {
   describe('getDivisas', () => {
     it('requests the divisas maestro endpoint and parses the results payload', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: divisasPayload }))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('estadisticasCambiarias.getDivisas').body),
+      )
       const result = await estadisticasCambiarias.getDivisas()
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/estadisticascambiarias/v1.0/Maestros/Divisas',
         { params: undefined },
       )
-      expect(result).toEqual<ResultGetDivisasV1>({
-        divisas: divisasPayload,
-      })
-      expect(result.divisas[0].denominacion).toBe('Dólar estadounidense')
+      expect(result).toEqual<ResultGetDivisasV1>({ divisas: divisasResult })
+      expect(result.divisas[0].denominacion).toBe('PESO')
     })
 
     it('forwards the requested version', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: divisasPayload }))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('estadisticasCambiarias.getDivisas').body),
+      )
       await estadisticasCambiarias.getDivisas({ version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -102,46 +94,59 @@ describe('EstadisticasCambiarias', () => {
   describe('getCotizaciones', () => {
     it('requests the cotizaciones endpoint without fecha param', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: cotizacionesResult }))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getCotizaciones').body,
+        ),
+      )
       const result = await estadisticasCambiarias.getCotizaciones()
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/estadisticascambiarias/v1.0/Cotizaciones',
         { params: undefined },
       )
-      expect(result).toEqual<ResultGetCotizacionesV1>({
-        fecha: '2024-06-01',
-        detalle: cotizacionesPayload,
-      })
+      expect(result).toEqual<ResultGetCotizacionesV1>(cotizacionesResult)
     })
 
     it('coerces a Date fecha into ISO and sends it as query param', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: cotizacionesResult }))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getCotizaciones').body,
+        ),
+      )
       await estadisticasCambiarias.getCotizaciones(
-        new Date('2024-06-01T00:00:00Z'),
+        new Date('2024-06-12T00:00:00Z'),
       )
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/estadisticascambiarias/v1.0/Cotizaciones',
-        { params: { fecha: '2024-06-01' } },
+        { params: { fecha: '2024-06-12' } },
       )
     })
 
     it('passes through an ISO string fecha', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: cotizacionesResult }))
-      await estadisticasCambiarias.getCotizaciones('2024-06-01')
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getCotizaciones').body,
+        ),
+      )
+      await estadisticasCambiarias.getCotizaciones('2024-06-12')
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/estadisticascambiarias/v1.0/Cotizaciones',
-        { params: { fecha: '2024-06-01' } },
+        { params: { fecha: '2024-06-12' } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse({ results: cotizacionesResult }))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getCotizaciones').body,
+        ),
+      )
       await estadisticasCambiarias.getCotizaciones(undefined, {
         version: '1.0',
       })
@@ -156,36 +161,44 @@ describe('EstadisticasCambiarias', () => {
   describe('getEvolucionMoneda', () => {
     it('interpolates the moneda path var, sends all params and parses the full body', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse(evolucionPayload))
-      const result = await estadisticasCambiarias.getEvolucionMoneda('USD', {
-        fechadesde: new Date('2024-01-01T00:00:00Z'),
-        fechahasta: '2024-06-01',
-        limit: 100,
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getEvolucionMoneda').body,
+        ),
+      )
+      const result = await estadisticasCambiarias.getEvolucionMoneda('EUR', {
+        fechadesde: '2024-06-10',
+        fechahasta: '2024-06-12',
+        limit: 10,
         offset: 10,
       })
       expect(request).toHaveBeenCalledWith(
         'GET',
-        '/estadisticascambiarias/v1.0/Cotizaciones/USD',
+        '/estadisticascambiarias/v1.0/Cotizaciones/EUR',
         {
           params: {
-            fechadesde: '2024-01-01',
-            fechahasta: '2024-06-01',
-            limit: 100,
+            fechadesde: '2024-06-10',
+            fechahasta: '2024-06-12',
+            limit: 10,
             offset: 10,
           },
         },
       )
       expect(result).toEqual<ResultGetEvolucionMonedaV1>({
-        resultset: { count: 1, offset: 0, limit: 1000 },
-        cotizaciones: [{ fecha: '2024-06-01', detalle: cotizacionesPayload }],
+        resultset: evolucionBody.metadata.resultset,
+        cotizaciones: evolucionBody.results,
       })
-      expect(result.resultset.count).toBe(1)
-      expect(result.cotizaciones[0].detalle[0].codigoMoneda).toBe('USD')
+      expect(result.resultset.count).toBe(3)
+      expect(result.cotizaciones[0].detalle[0].codigoMoneda).toBe('EUR')
     })
 
     it('omits optional params when not provided', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse(evolucionPayload))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getEvolucionMoneda').body,
+        ),
+      )
       const result = await estadisticasCambiarias.getEvolucionMoneda('EUR')
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -193,20 +206,24 @@ describe('EstadisticasCambiarias', () => {
         { params: {} },
       )
       expect(result).toEqual<ResultGetEvolucionMonedaV1>({
-        resultset: { count: 1, offset: 0, limit: 1000 },
-        cotizaciones: [{ fecha: '2024-06-01', detalle: cotizacionesPayload }],
+        resultset: evolucionBody.metadata.resultset,
+        cotizaciones: evolucionBody.results,
       })
     })
 
     it('forwards the requested version', async () => {
       const { estadisticasCambiarias, request } = makeEstadisticasCambiarias()
-      request.mockResolvedValue(jsonResponse(evolucionPayload))
-      await estadisticasCambiarias.getEvolucionMoneda('USD', {
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('estadisticasCambiarias.getEvolucionMoneda').body,
+        ),
+      )
+      await estadisticasCambiarias.getEvolucionMoneda('EUR', {
         version: '1.0',
       })
       expect(request).toHaveBeenCalledWith(
         'GET',
-        '/estadisticascambiarias/v1.0/Cotizaciones/USD',
+        '/estadisticascambiarias/v1.0/Cotizaciones/EUR',
         { params: {} },
       )
     })

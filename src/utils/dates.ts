@@ -3,6 +3,13 @@ import { BCRAError } from '../errors'
 const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 const COMPACT_RE = /^(\d{4})(\d{2})(\d{2})$/
 
+/**
+ * Normaliza una fecha a string `YYYY-MM-DD`, aceptando:
+ * - `Date` válido (se serializa en UTC).
+ * - string ISO `YYYY-MM-DD` o compacto `YYYYMMDD`.
+ *
+ * Lanza `TypeError` (otro tipo) o {@link BCRAError} (fecha inválida).
+ */
 export function coerceDate(value: Date | string): string {
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) {

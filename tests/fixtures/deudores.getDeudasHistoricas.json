@@ -1,0 +1,9 @@
+{
+  "path": "/CentralDeDeudores/v1.0/Deudas/Historicas/20111111112",
+  "params": null,
+  "statusCode": 404,
+  "body": {
+    "status": 404,
+    "errorMessages": ["No se encontró datos para la identificación ingresada."]
+  }
+}

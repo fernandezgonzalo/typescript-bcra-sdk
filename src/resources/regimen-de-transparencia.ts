@@ -29,10 +29,20 @@ import {
   type ResultGetTarjetasCreditoV1,
 } from '../models/transparencia.js'
 
+/** Opciones comunes de {@link RegimenDeTransparencia}. */
 export interface RegimenDeTransparenciaOptions {
+  /** Versión del endpoint a usar (default: la más reciente). */
   readonly version?: string
 }
 
+/**
+ * Régimen de Transparencia: cajas de ahorro, paquetes, plazos fijos y
+ * préstamos de las entidades financieras.
+ *
+ * @example
+ * const cajas = await bcra.regimenDeTransparencia.getCajasAhorros(11)
+ * const tarjetas = await bcra.regimenDeTransparencia.getTarjetasCredito()
+ */
 export class RegimenDeTransparencia extends Resource {
   constructor(transport: Transport) {
     super(transport)
@@ -66,6 +76,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve las cajas de ahorro (`GET /transparencia/v1.0/CajasAhorros`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getCajasAhorros(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -78,6 +93,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve los paquetes de productos (`GET /transparencia/v1.0/PaquetesProductos`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getPaquetesProductos(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -90,6 +110,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve los plazos fijos (`GET /transparencia/v1.0/PlazosFijos`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getPlazosFijos(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -102,6 +127,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve los préstamos prendarios (`GET /transparencia/v1.0/Prestamos/Prendarios`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getPrestamosPrendarios(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -114,6 +144,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve los préstamos hipotecarios (`GET /transparencia/v1.0/Prestamos/Hipotecarios`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getPrestamosHipotecarios(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -126,6 +161,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve los préstamos personales (`GET /transparencia/v1.0/Prestamos/Personales`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getPrestamosPersonales(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},
@@ -138,6 +178,11 @@ export class RegimenDeTransparencia extends Resource {
     })
   }
 
+  /**
+   * Devuelve las tarjetas de crédito (`GET /transparencia/v1.0/TarjetasCredito`).
+   *
+   * @param codigoEntidad Código de la entidad a filtrar.
+   */
   getTarjetasCredito(
     codigoEntidad?: number,
     opts: RegimenDeTransparenciaOptions = {},

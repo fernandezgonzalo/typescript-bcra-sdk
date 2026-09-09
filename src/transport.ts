@@ -10,6 +10,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms * 1000))
 }
 
+/**
+ * Wrapper de `fetch` con timeout, reintentos y mapping de errores.
+ *
+ * Usa el `fetch` global (los tests pueden reemplazarlo con `vi.stubGlobal`).
+ * No abre conexiones propias: delega íntegramente en el fetch nativo de Node.
+ */
 export class Transport {
   readonly baseUrl: string
   readonly timeout: number
@@ -21,6 +27,17 @@ export class Transport {
     this.retries = retries ?? new RetryPolicy()
   }
 
+  /**
+   * Ejecuta un request `GET` sobre `path` (relativo a `baseUrl`) con query
+   * `params` opcionales.
+   *
+   * - Timeout: lanza {@link BCRATimeoutError}.
+   * - `fetch` rechazado: lanza {@link BCRAConnectionError}.
+   * - Status `!ok`: lanza {@link BCRAHTTPError} (con reintento si el status
+   *   está en `retries.statuses` y respetando `Retry-After` cuando viene).
+   *
+   * @returns La `Response` del servidor, sin parsear.
+   */
   async request(
     method: string,
     path: string,

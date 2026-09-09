@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { RegimenDeTransparencia } from '../../src/resources/regimen-de-transparencia'
 import { Transport } from '../../src/transport'
+import { jsonResponse, loadFixture } from '../setup'
 import type {
   CajaAhorro,
   ResultGetCajasAhorrosV1,
@@ -30,14 +31,6 @@ import type {
   ResultGetTarjetasCreditoV1,
 } from '../../src/models/transparencia'
 
-function jsonResponse(body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    statusText: 'OK',
-    headers: { 'content-type': 'application/json' },
-  })
-}
-
 function makeRegimen(): {
   regimen: RegimenDeTransparencia
   request: ReturnType<typeof vi.fn>
@@ -47,140 +40,29 @@ function makeRegimen(): {
   return { regimen: new RegimenDeTransparencia(transport), request }
 }
 
-function resultsPayload(item: unknown): { results: unknown[] } {
-  return { results: [item] }
+function resultsFrom(fixture: string): unknown[] {
+  return (loadFixture(fixture).body as { results: unknown[] }).results
 }
 
-const baseEntidad = {
-  codigoEntidad: 11,
-  descripcionEntidad: 'BANCO',
-  fechaInformacion: '2024-06-30',
-}
-
-const cajaAhorro: CajaAhorro = {
-  ...baseEntidad,
-  procesoSimplificadoDebidaDiligencia: 'NO',
-}
-const cajasAhorrosPayload = resultsPayload(cajaAhorro)
-
-const paqueteProducto: PaqueteProducto = {
-  ...baseEntidad,
-  nombreCompleto: 'PAQUETE',
-  nombreCorto: 'PAQ',
-  comisionMaximaMantenimiento: 100.5,
-  ingresoMinimoMensual: 50000,
-  antiguedadLaboralMinimaMeses: 6,
-  edadMaximaSolicitada: 65,
-  beneficiarios: 'PERSONAS HUMANAS',
-  segmento: 'MINORISTA',
-  productosIntegrantes: 'CC; CA',
-  territorioValidez: 'NACIONAL',
-  masInformacion: null,
-}
-const paquetesProductosPayload = resultsPayload(paqueteProducto)
-
-const plazoFijo: PlazoFijo = {
-  ...baseEntidad,
-  nombreCompleto: 'PLAZO FIJO',
-  nombreCorto: 'PF',
-  denominacion: 'PESOS',
-  montoMinimoInvertir: 1000,
-  plazoMinimoInvertirDias: 30,
-  canalConstitucion: 'DIGITAL',
-  tasaEfectivaAnualMinima: 40.5,
-  territorioValidez: 'NACIONAL',
-  masInformacion: 'https://banco.com',
-}
-const plazosFijosPayload = resultsPayload(plazoFijo)
-
-const prestamoPrendario: PrestamoPrendario = {
-  relacionMontoTasacion: 80,
-  destinoFondos: 'LIBRE DISPONIBILIDAD',
-  montoMinimoOtorgable: 50000,
-  denominacion: 'PESOS',
-  montoMaximoOtorgable: 1000000,
-  plazoMaximoOtorgable: 60,
-  ingresoMinimoMensual: 100000,
-  antiguedadLaboralMinimaMeses: 6,
-  edadMaximaSolicitada: 65,
-  relacionCuotaIngreso: 30,
-  beneficiario: 'PERSONAS HUMANAS',
-  cargoMaximoCancelacionAnticipada: 0,
-  tasaEfectivaAnualMaxima: 50.5,
-  tipoTasa: 'FIJA',
-  costoFinancieroEfectivoTotalMaximo: 60.5,
-  cuotaInicial: 20000,
-  ...baseEntidad,
-  nombreCompleto: 'AUTO',
-  nombreCorto: 'AUTO',
-  territorioValidez: 'NACIONAL',
-  masInformacion: null,
-}
-const prestamosPrendariosPayload = resultsPayload(prestamoPrendario)
-
-const prestamoHipotecario: PrestamoHipotecario = {
-  relacionMontoTasacion: 75,
-  destinoFondos: 'VIVIENDA',
-  denominacion: 'PESOS',
-  montoMaximoOtorgable: 5000000,
-  plazoMaximoOtorgable: 240,
-  ingresoMinimoMensual: 200000,
-  antiguedadLaboralMinimaMeses: 12,
-  edadMaximaSolicitada: 70,
-  relacionCuotaIngreso: 30,
-  beneficiario: 'PERSONAS HUMANAS',
-  cargoMaximoCancelacionAnticipada: 0,
-  tasaEfectivaAnualMaxima: 45.5,
-  tipoTasa: 'MIXTA',
-  costoFinancieroEfectivoTotalMaximo: 55.5,
-  cuotaInicial: 250000,
-  ...baseEntidad,
-  nombreCompleto: 'VIVIENDA',
-  nombreCorto: 'VIV',
-  territorioValidez: 'NACIONAL',
-  masInformacion: 'https://banco.com',
-}
-const prestamosHipotecariosPayload = resultsPayload(prestamoHipotecario)
-
-const prestamoPersonal: PrestamoPersonal = {
-  montoMinimoOtorgable: 10000,
-  denominacion: 'PESOS',
-  montoMaximoOtorgable: 500000,
-  plazoMaximoOtorgable: 36,
-  ingresoMinimoMensual: 50000,
-  antiguedadLaboralMinimaMeses: 3,
-  edadMaximaSolicitada: 65,
-  relacionCuotaIngreso: 35,
-  beneficiario: 'PERSONAS HUMANAS',
-  cargoMaximoCancelacionAnticipada: 0,
-  tasaEfectivaAnualMaxima: 60.5,
-  tipoTasa: 'FIJA',
-  costoFinancieroEfectivoTotalMaximo: 70.5,
-  cuotaInicial: 0,
-  ...baseEntidad,
-  nombreCompleto: 'PERSONAL',
-  nombreCorto: 'PERS',
-  territorioValidez: 'NACIONAL',
-  masInformacion: null,
-}
-const prestamosPersonalesPayload = resultsPayload(prestamoPersonal)
-
-const tarjetaCredito: TarjetaCredito = {
-  comisionMaximaAdministracionMantenimiento: 1000,
-  comisionMaximaRenovacion: 1200,
-  tasaEfectivaAnualMaximaFinanciacion: 80.5,
-  tasaEfectivaAnualMaximaAdelantoEfectivo: 90.5,
-  ingresoMinimoMensual: 40000,
-  antiguedadLaboralMinimaMeses: 6,
-  edadMaximaSolicitada: 65,
-  segmento: 'MINORISTA',
-  ...baseEntidad,
-  nombreCompleto: 'TARJETA',
-  nombreCorto: 'TC',
-  territorioValidez: 'NACIONAL',
-  masInformacion: null,
-}
-const tarjetasCreditoPayload = resultsPayload(tarjetaCredito)
+const cajasAhorros = resultsFrom(
+  'transparencia.getCajasAhorros',
+) as CajaAhorro[]
+const paquetesProductos = resultsFrom(
+  'transparencia.getPaquetesProductos',
+) as PaqueteProducto[]
+const plazosFijos = resultsFrom('transparencia.getPlazosFijos') as PlazoFijo[]
+const prestamosPrendarios = resultsFrom(
+  'transparencia.getPrestamosPrendarios',
+) as PrestamoPrendario[]
+const prestamosHipotecarios = resultsFrom(
+  'transparencia.getPrestamosHipotecarios',
+) as PrestamoHipotecario[]
+const prestamosPersonales = resultsFrom(
+  'transparencia.getPrestamosPersonales',
+) as PrestamoPersonal[]
+const tarjetasCredito = resultsFrom(
+  'transparencia.getTarjetasCredito',
+) as TarjetaCredito[]
 
 describe('RegimenDeTransparencia', () => {
   afterEach(() => {
@@ -217,7 +99,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getCajasAhorros', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(cajasAhorrosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getCajasAhorros').body),
+      )
       const result = await regimen.getCajasAhorros()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -225,25 +109,29 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetCajasAhorrosV1>({
-        cajas_ahorros: [cajaAhorro],
+        cajas_ahorros: cajasAhorros,
       })
-      expect(result.cajas_ahorros[0].codigoEntidad).toBe(11)
+      expect(result.cajas_ahorros[0].codigoEntidad).toBe(7)
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(cajasAhorrosPayload))
-      await regimen.getCajasAhorros(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getCajasAhorros').body),
+      )
+      await regimen.getCajasAhorros(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/CajasAhorros',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(cajasAhorrosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getCajasAhorros').body),
+      )
       await regimen.getCajasAhorros(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -256,7 +144,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getPaquetesProductos', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(paquetesProductosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPaquetesProductos').body),
+      )
       const result = await regimen.getPaquetesProductos()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -264,25 +154,30 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetPaquetesProductosV1>({
-        paquetes_productos: [paqueteProducto],
+        paquetes_productos: paquetesProductos,
       })
-      expect(result.paquetes_productos[0].masInformacion).toBeNull()
+      expect(result.paquetes_productos).toHaveLength(72)
+      expect(result.paquetes_productos[0].nombreCorto).toBe('LOGROS')
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(paquetesProductosPayload))
-      await regimen.getPaquetesProductos(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPaquetesProductos').body),
+      )
+      await regimen.getPaquetesProductos(14)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/PaquetesProductos',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 14 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(paquetesProductosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPaquetesProductos').body),
+      )
       await regimen.getPaquetesProductos(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -295,7 +190,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getPlazosFijos', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(plazosFijosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPlazosFijos').body),
+      )
       const result = await regimen.getPlazosFijos()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -303,25 +200,30 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetPlazosFijosV1>({
-        plazos_fijos: [plazoFijo],
+        plazos_fijos: plazosFijos,
       })
-      expect(result.plazos_fijos[0].tasaEfectivaAnualMinima).toBe(40.5)
+      expect(result.plazos_fijos).toHaveLength(12)
+      expect(result.plazos_fijos[0].tasaEfectivaAnualMinima).toBe(19.92)
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(plazosFijosPayload))
-      await regimen.getPlazosFijos(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPlazosFijos').body),
+      )
+      await regimen.getPlazosFijos(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/PlazosFijos',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(plazosFijosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPlazosFijos').body),
+      )
       await regimen.getPlazosFijos(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -334,7 +236,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getPrestamosPrendarios', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPrendariosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPrendarios').body),
+      )
       const result = await regimen.getPrestamosPrendarios()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -342,25 +246,30 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetPrestamosPrendariosV1>({
-        prestamos_prendarios: [prestamoPrendario],
+        prestamos_prendarios: prestamosPrendarios,
       })
-      expect(result.prestamos_prendarios[0].montoMaximoOtorgable).toBe(1000000)
+      expect(result.prestamos_prendarios).toHaveLength(18)
+      expect(result.prestamos_prendarios[0].montoMaximoOtorgable).toBe(57000000)
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPrendariosPayload))
-      await regimen.getPrestamosPrendarios(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPrendarios').body),
+      )
+      await regimen.getPrestamosPrendarios(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/Prestamos/Prendarios',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPrendariosPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPrendarios').body),
+      )
       await regimen.getPrestamosPrendarios(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -373,7 +282,11 @@ describe('RegimenDeTransparencia', () => {
   describe('getPrestamosHipotecarios', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosHipotecariosPayload))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('transparencia.getPrestamosHipotecarios').body,
+        ),
+      )
       const result = await regimen.getPrestamosHipotecarios()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -381,25 +294,34 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetPrestamosHipotecariosV1>({
-        prestamos_hipotecarios: [prestamoHipotecario],
+        prestamos_hipotecarios: prestamosHipotecarios,
       })
+      expect(result.prestamos_hipotecarios).toHaveLength(1)
       expect(result.prestamos_hipotecarios[0].plazoMaximoOtorgable).toBe(240)
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosHipotecariosPayload))
-      await regimen.getPrestamosHipotecarios(11)
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('transparencia.getPrestamosHipotecarios').body,
+        ),
+      )
+      await regimen.getPrestamosHipotecarios(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/Prestamos/Hipotecarios',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosHipotecariosPayload))
+      request.mockResolvedValue(
+        jsonResponse(
+          loadFixture('transparencia.getPrestamosHipotecarios').body,
+        ),
+      )
       await regimen.getPrestamosHipotecarios(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -412,7 +334,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getPrestamosPersonales', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPersonalesPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPersonales').body),
+      )
       const result = await regimen.getPrestamosPersonales()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -420,25 +344,30 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetPrestamosPersonalesV1>({
-        prestamos_personales: [prestamoPersonal],
+        prestamos_personales: prestamosPersonales,
       })
-      expect(result.prestamos_personales[0].tasaEfectivaAnualMaxima).toBe(60.5)
+      expect(result.prestamos_personales).toHaveLength(7)
+      expect(result.prestamos_personales[0].tasaEfectivaAnualMaxima).toBe(282.7)
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPersonalesPayload))
-      await regimen.getPrestamosPersonales(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPersonales').body),
+      )
+      await regimen.getPrestamosPersonales(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/Prestamos/Personales',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(prestamosPersonalesPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getPrestamosPersonales').body),
+      )
       await regimen.getPrestamosPersonales(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -451,7 +380,9 @@ describe('RegimenDeTransparencia', () => {
   describe('getTarjetasCredito', () => {
     it('requests the endpoint and parses the results payload', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(tarjetasCreditoPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getTarjetasCredito').body),
+      )
       const result = await regimen.getTarjetasCredito()
       expect(request).toHaveBeenCalledWith(
         'GET',
@@ -459,25 +390,30 @@ describe('RegimenDeTransparencia', () => {
         { params: undefined },
       )
       expect(result).toEqual<ResultGetTarjetasCreditoV1>({
-        tarjetas_credito: [tarjetaCredito],
+        tarjetas_credito: tarjetasCredito,
       })
-      expect(result.tarjetas_credito[0].segmento).toBe('MINORISTA')
+      expect(result.tarjetas_credito).toHaveLength(12)
+      expect(result.tarjetas_credito[0].segmento).toBe('Internacional')
     })
 
     it('sends the codigoEntidad filter when provided', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(tarjetasCreditoPayload))
-      await regimen.getTarjetasCredito(11)
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getTarjetasCredito').body),
+      )
+      await regimen.getTarjetasCredito(7)
       expect(request).toHaveBeenCalledWith(
         'GET',
         '/transparencia/v1.0/TarjetasCredito',
-        { params: { codigoEntidad: 11 } },
+        { params: { codigoEntidad: 7 } },
       )
     })
 
     it('forwards the requested version', async () => {
       const { regimen, request } = makeRegimen()
-      request.mockResolvedValue(jsonResponse(tarjetasCreditoPayload))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('transparencia.getTarjetasCredito').body),
+      )
       await regimen.getTarjetasCredito(undefined, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',

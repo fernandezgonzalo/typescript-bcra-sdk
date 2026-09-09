@@ -1,0 +1,21 @@
+{
+  "path": "/cheques/v1.0/denunciados/11/20377516",
+  "params": null,
+  "statusCode": 200,
+  "body": {
+    "status": 200,
+    "results": {
+      "numeroCheque": 20377516,
+      "denunciado": true,
+      "fechaProcesamiento": "2026-09-08",
+      "denominacionEntidad": "BANCO DE LA NACION ARGENTINA",
+      "detalles": [
+        {
+          "sucursal": 524,
+          "numeroCuenta": 5240055962,
+          "causal": "Denunciado por tercero"
+        }
+      ]
+    }
+  }
+}

@@ -1,20 +1,35 @@
 import { BCRAEndpointVersionError } from './errors.js'
 import { Transport } from './transport.js'
 
+/** Factory que deserializa un payload `unknown` en un modelo tipado. */
 export type ModelFactory<T> = (data: unknown) => T
 
+/** Especificación de una versión de endpoint. */
 export interface VersionSpec<T> {
+  /** Template del path, con `{vars}` interpolables. */
   readonly path: string
+  /** Factory del modelo del recurso. */
   readonly model: ModelFactory<T>
+  /** Marca la versión como deprecada (emite warning al resolverla). */
   readonly deprecated?: boolean
 }
 
+/** Opciones de {@link Resource.fetch}. */
 export interface FetchOptions<T> {
+  /** Nombre del endpoint registrado vía `registerVersion`. */
   readonly endpoint: string
+  /** Versión a resolver (default: la más reciente registrada). */
   readonly version?: string
+  /** Query params del request. */
   readonly params?: Record<string, unknown>
+  /** Valores para interpolar `{vars}` en el `path`. */
   readonly pathVars?: Record<string, string>
+  /** Factory del modelo. */
   readonly model: ModelFactory<T>
+  /**
+   * Key del body donde está el payload a deserializar.
+   * `null` parsea el body completo (endpoints que devuelven `{results, metadata}`).
+   */
   readonly resultsKey?: string | null
 }
 
@@ -47,6 +62,12 @@ function interpolatePath(
   })
 }
 
+/**
+ * Base de todos los resources: registra endpoints versionados, resuelve la
+ * versión por defecto y deserializa las respuestas en modelos.
+ *
+ * No se usa directamente; los resources lo extienden (ver {@link BCRAClient}).
+ */
 export class Resource {
   protected readonly transport: Transport
   private readonly _specs: Map<string, Map<string, VersionSpec<unknown>>> =
@@ -56,6 +77,7 @@ export class Resource {
     this.transport = transport
   }
 
+  /** Registra una versión de endpoint (se usa en el `constructor` de cada resource). */
   protected registerVersion(
     endpoint: string,
     version: string,
@@ -67,6 +89,13 @@ export class Resource {
     this._specs.set(endpoint, endpointSpecs)
   }
 
+  /**
+   * Resuelve la versión de un endpoint.
+   *
+   * Sin `version` devuelve la más reciente (orden semver). Lanza
+   * {@link BCRAEndpointVersionError} si el endpoint no tiene versiones o la
+   * pedida no existe. Si la resuelta está deprecada emite un `console.warn`.
+   */
   protected resolveVersion(
     endpoint: string,
     version?: string,
@@ -100,6 +129,7 @@ export class Resource {
     return spec
   }
 
+  /** Versiones registradas de un endpoint, p.ej. `{ '1.0': { deprecated: false } }`. */
   versions(endpoint: string): Record<string, { deprecated: boolean }> {
     const endpointSpecs = this._specs.get(endpoint)
     const versions = sortVersions(
@@ -112,6 +142,13 @@ export class Resource {
     return result
   }
 
+  /**
+   * Resuelve la versión, interpola `{vars}` en el `path`, ejecuta el request
+   * y deserializa la respuesta vía `model`.
+   *
+   * Con `resultsKey === null` parsea el body completo; si no, parses
+   * `body[resultsKey]` (default `'results'`).
+   */
   protected async fetch<T>(options: FetchOptions<T>): Promise<T> {
     const {
       endpoint,

@@ -1,19 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { Cheques } from '../../src/resources/cheques'
 import { Transport } from '../../src/transport'
+import { jsonResponse, loadFixture } from '../setup'
+import type { EntidadBancaria } from '../../src/models/entidades'
 import type { ResultGetEntidadesV1 } from '../../src/models/entidades'
-import type {
-  DetalleDenuncia,
-  ResultGetChequeDenunciadoV1,
-} from '../../src/models/denunciados'
-
-function jsonResponse(body: unknown): Response {
-  return new Response(JSON.stringify(body), {
-    status: 200,
-    statusText: 'OK',
-    headers: { 'content-type': 'application/json' },
-  })
-}
+import type { ResultGetChequeDenunciadoV1 } from '../../src/models/denunciados'
 
 function makeCheques(): {
   cheques: Cheques
@@ -24,21 +15,17 @@ function makeCheques(): {
   return { cheques: new Cheques(transport), request }
 }
 
-const entidadesPayload = [{ codigoEntidad: 11, denominacion: 'Banco Nación' }]
+const entidadesPayload = (
+  loadFixture('cheques.getEntidades').body as {
+    results: EntidadBancaria[]
+  }
+).results
 
-const detalleDenuncia: DetalleDenuncia = {
-  sucursal: 2,
-  numeroCuenta: 345,
-  causal: 'Falta de fondos',
-}
-
-const chequeDenunciadoPayload = {
-  numeroCheque: 123,
-  denunciado: true,
-  fechaProcesamiento: '2024-06-01',
-  denominacionEntidad: 'Banco Nación',
-  detalles: [detalleDenuncia],
-}
+const chequeDenunciadoPayload = (
+  loadFixture('cheques.getChequeDenunciado').body as {
+    results: ResultGetChequeDenunciadoV1
+  }
+).results
 
 describe('Cheques', () => {
   afterEach(() => {
@@ -60,7 +47,9 @@ describe('Cheques', () => {
   describe('getEntidades', () => {
     it('requests the entidades endpoint and parses the results payload', async () => {
       const { cheques, request } = makeCheques()
-      request.mockResolvedValue(jsonResponse({ results: entidadesPayload }))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('cheques.getEntidades').body),
+      )
       const result = await cheques.getEntidades()
       expect(request).toHaveBeenCalledWith('GET', '/cheques/v1.0/entidades', {
         params: undefined,
@@ -68,12 +57,14 @@ describe('Cheques', () => {
       expect(result).toEqual<ResultGetEntidadesV1>({
         entidades: entidadesPayload,
       })
-      expect(result.entidades[0].denominacion).toBe('Banco Nación')
+      expect(result.entidades[0].denominacion).toBe('BANCO BANEX S.A.')
     })
 
     it('forwards the requested version', async () => {
       const { cheques, request } = makeCheques()
-      request.mockResolvedValue(jsonResponse({ results: entidadesPayload }))
+      request.mockResolvedValue(
+        jsonResponse(loadFixture('cheques.getEntidades').body),
+      )
       await cheques.getEntidades({ version: '1.0' })
       expect(request).toHaveBeenCalledWith('GET', '/cheques/v1.0/entidades', {
         params: undefined,
@@ -85,19 +76,19 @@ describe('Cheques', () => {
     it('interpolates the path vars and parses the results payload', async () => {
       const { cheques, request } = makeCheques()
       request.mockResolvedValue(
-        jsonResponse({ results: chequeDenunciadoPayload }),
+        jsonResponse(loadFixture('cheques.getChequeDenunciado').body),
       )
-      const result = await cheques.getChequeDenunciado(11, 123)
+      const result = await cheques.getChequeDenunciado(11, 20377516)
       expect(request).toHaveBeenCalledWith(
         'GET',
-        '/cheques/v1.0/denunciados/11/123',
+        '/cheques/v1.0/denunciados/11/20377516',
         { params: undefined },
       )
       expect(result).toEqual<ResultGetChequeDenunciadoV1>(
         chequeDenunciadoPayload,
       )
-      expect(result.numeroCheque).toBe(123)
-      expect(result.detalles[0].causal).toBe('Falta de fondos')
+      expect(result.numeroCheque).toBe(20377516)
+      expect(result.detalles[0].causal).toBe('Denunciado por tercero')
     })
 
     it('defaults missing detalles to an empty list', async () => {
@@ -107,19 +98,19 @@ describe('Cheques', () => {
           results: { ...chequeDenunciadoPayload, detalles: undefined },
         }),
       )
-      const result = await cheques.getChequeDenunciado(11, 123)
+      const result = await cheques.getChequeDenunciado(11, 20377516)
       expect(result.detalles).toEqual([])
     })
 
     it('forwards the requested version', async () => {
       const { cheques, request } = makeCheques()
       request.mockResolvedValue(
-        jsonResponse({ results: chequeDenunciadoPayload }),
+        jsonResponse(loadFixture('cheques.getChequeDenunciado').body),
       )
-      await cheques.getChequeDenunciado(11, 123, { version: '1.0' })
+      await cheques.getChequeDenunciado(11, 20377516, { version: '1.0' })
       expect(request).toHaveBeenCalledWith(
         'GET',
-        '/cheques/v1.0/denunciados/11/123',
+        '/cheques/v1.0/denunciados/11/20377516',
         { params: undefined },
       )
     })

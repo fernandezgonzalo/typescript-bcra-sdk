@@ -36,6 +36,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "docs": "typedoc",
+    "record:fixtures": "node scripts/record_fixtures.mjs",
     "release": "changeset publish",
     "prepublishOnly": "npm run build"
   },

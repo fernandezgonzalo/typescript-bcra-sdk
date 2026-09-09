@@ -12,22 +12,44 @@ import {
   type ResultGetMonetariasV1,
 } from '../models/monetarias.js'
 
+/** Opciones comunes de {@link Monetarias}. */
 export interface MonetariasOptions {
+  /** Versión del endpoint a usar (default: la más reciente). */
   readonly version?: string
 }
 
+/** Opciones de {@link Monetarias.getEvolucionVariable}. */
 export interface GetEvolucionVariableOptions extends MonetariasOptions {
+  /** Desde qué fecha (`YYYY-MM-DD` o `Date`). */
   readonly desde?: Date | string
+  /** Hasta qué fecha (`YYYY-MM-DD` o `Date`). */
   readonly hasta?: Date | string
+  /** Primer resultado a devolver (offset). */
   readonly offset?: number
+  /** Cantidad máxima de resultados. */
   readonly limit?: number
 }
 
+/** Opciones de {@link Monetarias.getMetodologias}. */
 export interface GetMetodologiasOptions extends MonetariasOptions {
+  /** Primer resultado a devolver (offset). */
   readonly offset?: number
+  /** Cantidad máxima de resultados. */
   readonly limit?: number
 }
 
+/**
+ * Estadísticas monetarias y metodologías (API v4.0 del BCRA).
+ *
+ * La API v4.0 incluye las Principales Variables; las versiones v1.0–v3.0
+ * quedaron deprecadas por el BCRA y no se registran.
+ *
+ * @example
+ * const monetarias = await bcra.monetarias.getMonetarias()
+ * const evolucion = await bcra.monetarias.getEvolucionVariable(1, {
+ *   desde: '2024-01-01',
+ * })
+ */
 export class Monetarias extends Resource {
   constructor(transport: Transport) {
     super(transport)
@@ -49,6 +71,7 @@ export class Monetarias extends Resource {
     })
   }
 
+  /** Devuelve las variables monetarias disponibles (`GET /estadisticas/v4.0/monetarias`). */
   getMonetarias(opts: MonetariasOptions = {}): Promise<ResultGetMonetariasV1> {
     return this.fetch({
       endpoint: 'getMonetarias',
@@ -58,6 +81,12 @@ export class Monetarias extends Resource {
     })
   }
 
+  /**
+   * Devuelve la evolución histórica de una variable
+   * (`GET /estadisticas/v4.0/monetarias/{idVariable}`).
+   *
+   * @param idVariable ID de la variable (ver {@link getMonetarias}).
+   */
   getEvolucionVariable(
     idVariable: number,
     opts: GetEvolucionVariableOptions = {},
@@ -85,6 +114,7 @@ export class Monetarias extends Resource {
     })
   }
 
+  /** Devuelve el listado de metodologías disponibles (`GET /estadisticas/v4.0/metodologia`). */
   getMetodologias(
     opts: GetMetodologiasOptions = {},
   ): Promise<ResultGetMetodologiasV1> {
@@ -104,6 +134,12 @@ export class Monetarias extends Resource {
     })
   }
 
+  /**
+   * Devuelve la metodología de una variable
+   * (`GET /estadisticas/v4.0/metodologia/{idVariable}`).
+   *
+   * @param idVariable ID de la variable (ver {@link getMonetarias}).
+   */
   getMetodologia(
     idVariable: number,
     opts: MonetariasOptions = {},
