@@ -2,8 +2,6 @@
 
 ## 0.1.0 (en curso)
 
-Cierre de la Fase 6 del plan (`todo_typescript_sdk.md`):
-
 - Fixtures offline para tests (un JSON por endpoint, 19 endpoints).
 - README final con documentación completa.
 - Cierre de la API pública con TSDoc (TypeDoc → referencia de API).
